@@ -1,0 +1,954 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>TGT 2026 — Sponsor Outreach</title>
+<link rel="icon" type="image/svg+xml" href="icons/favicon.svg">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/favicon-192.png">
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#191347">
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('/sw.js').catch(e => console.log('Service worker registration failed', e));
+    });
+  }
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#F7F5F1;
+    --surface:#FFFFFF;
+    --ink:#191347;
+    --charcoal:#2B2829;
+    --muted:#83808c;
+    --line:#E7E2D8;
+    --orange:#E45927;
+    --amber:#F58420;
+    --gold:#FDB715;
+    --yellow:#FAD506;
+    --sb-bg:#191347;
+    --sb-bg-raised:#231A5C;
+    --sb-text:#FFFFFF;
+    --sb-muted:rgba(255,255,255,.62);
+    --sb-line:rgba(255,255,255,.14);
+    --sb-hover:rgba(255,255,255,.08);
+    --sb-selected:rgba(253,183,21,.20);
+    --sb-committed:rgba(30,142,90,.35);
+  }
+  *{box-sizing:border-box;}
+  html,body{height:100%;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--charcoal);
+    font-family:'Manrope',system-ui,-apple-system,sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  #app{display:flex;height:100vh;overflow:hidden;}
+
+  /* ---------- Sidebar ---------- */
+  .sidebar{
+    width:280px;flex:none;background:var(--sb-bg);border-right:1px solid rgba(0,0,0,.15);
+    display:flex;flex-direction:column;height:100%;
+    box-shadow:2px 0 12px rgba(0,0,0,.12);
+  }
+  .sidebar-header{padding:18px 16px 12px;border-bottom:1px solid var(--sb-line);}
+  .brand-row{display:flex;align-items:center;gap:10px;margin-bottom:2px;}
+  .logo-chip{
+    width:34px;height:34px;border-radius:10px;flex:none;background:#F7F5F1;
+    display:flex;align-items:center;justify-content:center;box-shadow:0 2px 6px rgba(0,0,0,.3);
+  }
+  .brand-row img{width:26px;height:26px;border-radius:7px;flex:none;}
+  .sidebar-header h1{font-size:16px;font-weight:800;color:var(--sb-text);margin:0;letter-spacing:-.01em;line-height:1.15;}
+  .sidebar-header .sub{font-size:11.5px;color:var(--sb-muted);font-weight:600;margin-left:42px;}
+  .sync-status{font-size:10.5px;font-weight:700;margin-top:8px;display:flex;align-items:center;gap:5px;}
+  .sync-dot{width:6px;height:6px;border-radius:50%;flex:none;}
+  .sync-status.ok .sync-dot{background:#3ECF8E;box-shadow:0 0 6px rgba(62,207,142,.6);}
+  .sync-status.ok{color:#3ECF8E;}
+  .sync-status.syncing .sync-dot, .sync-status.loading .sync-dot{background:var(--gold);}
+  .sync-status.syncing, .sync-status.loading{color:var(--gold);}
+  .sync-status.error .sync-dot{background:var(--orange);box-shadow:0 0 6px rgba(228,89,39,.6);}
+  .sync-status.error{color:#FF8A65;}
+  .nav-row{display:flex;gap:6px;padding:14px 16px 6px;}
+  .nav-btn{
+    flex:1;font-family:inherit;font-size:12px;font-weight:800;padding:8px 6px;border-radius:9px;
+    border:1px solid var(--sb-line);background:transparent;color:var(--sb-text);cursor:pointer;text-align:center;
+  }
+  .nav-btn:hover{background:var(--sb-hover);}
+  .nav-btn.active{background:var(--gold);color:var(--ink);border-color:var(--gold);}
+  .add-btn-side{
+    margin:10px 16px 12px;background:var(--orange);color:#fff;border:none;padding:10px;border-radius:9px;
+    font-weight:800;font-size:12.5px;cursor:pointer;box-shadow:0 2px 8px rgba(228,89,39,.35);
+  }
+  .add-btn-side:hover{opacity:.92;}
+  .side-filters{display:flex;gap:6px;padding:0 16px 12px;}
+  .side-filters select{
+    flex:1;font-family:inherit;font-size:11.5px;font-weight:700;border-radius:8px;
+    border:1px solid var(--sb-line);background:var(--sb-bg-raised);color:var(--sb-text);padding:6px 6px;min-width:0;
+  }
+  .contact-list{flex:1;overflow-y:auto;padding:4px 8px 16px;}
+  .contact-row{
+    display:flex;align-items:center;gap:9px;padding:9px 8px;border-radius:10px;cursor:pointer;
+    margin-bottom:2px;
+  }
+  .contact-row:hover{background:var(--sb-hover);}
+  .contact-row.selected{background:var(--sb-selected);}
+  .contact-row.committed{background:var(--sb-committed);}
+  .contact-row.committed:hover{background:rgba(30,142,90,.45);}
+  .contact-row.committed.selected{background:rgba(253,183,21,.28);}
+  .contact-row .pdot{width:7px;height:7px;border-radius:50%;flex:none;}
+  .contact-row .crow-main{flex:1;min-width:0;}
+  .contact-row .crow-name{font-size:13px;font-weight:700;color:var(--sb-text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .contact-row .crow-sub{font-size:10.5px;color:var(--sb-muted);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .crow-status{width:9px;height:9px;border-radius:50%;flex:none;box-shadow:0 0 0 2px rgba(255,255,255,.15);}
+  .crow-urgent{width:6px;height:6px;border-radius:50%;background:var(--orange);flex:none;}
+  .empty-list{padding:20px 12px;font-size:12.5px;color:var(--sb-muted);font-style:italic;}
+
+  /* ---------- Main pane ---------- */
+  .main{flex:1;overflow-y:auto;height:100%;}
+  .main-inner{max-width:820px;margin:0 auto;padding:24px 28px 80px;}
+
+  .topbar{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap;margin-bottom:16px;}
+  .title-block h2{font-size:20px;font-weight:800;color:var(--ink);margin:0 0 2px;letter-spacing:-0.01em;}
+  .title-block .sub{font-size:13px;color:var(--muted);font-weight:600;}
+  .countdown{background:var(--ink);color:#fff;border-radius:14px;padding:10px 18px;text-align:center;min-width:110px;}
+  .countdown .num{font-size:22px;font-weight:800;line-height:1;}
+  .countdown .lbl{font-size:10px;text-transform:uppercase;letter-spacing:.06em;opacity:.75;margin-top:3px;}
+
+  .today-banner{
+    background:#fff;border:1.5px solid var(--orange);border-radius:14px;padding:12px 16px;margin-bottom:16px;
+    display:flex;gap:12px;align-items:center;
+  }
+  .today-banner .dot{width:9px;height:9px;border-radius:50%;background:var(--orange);flex:none;box-shadow:0 0 0 4px rgba(228,89,39,.15);}
+  .today-banner .txt{font-size:13.5px;font-weight:600;color:var(--charcoal);}
+  .today-banner .txt b{color:var(--orange);}
+
+  .progress-card{background:var(--surface);border-radius:16px;padding:22px 22px 20px;margin-bottom:16px;border:1px solid var(--line);box-shadow:0 2px 10px rgba(25,19,71,.06),0 1px 3px rgba(25,19,71,.04);position:relative;overflow:hidden;}
+  .progress-card::before{content:'';position:absolute;top:0;left:0;right:0;height:5px;background:linear-gradient(90deg,var(--gold),var(--orange));}
+  .progress-top{display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:8px;margin-bottom:14px;}
+  .progress-figure{font-size:28px;font-weight:800;color:var(--ink);}
+  .progress-figure span{font-size:14px;font-weight:600;color:var(--muted);}
+  .progress-targets{font-size:12px;color:var(--muted);font-weight:600;text-align:right;}
+  .bar-track{position:relative;height:16px;background:#F0ECE3;border-radius:8px;overflow:visible;margin:10px 0 26px;}
+  .bar-fill{position:absolute;left:0;top:0;height:100%;border-radius:8px;background:linear-gradient(90deg,var(--gold),var(--orange));transition:width .4s ease;}
+  .tick{position:absolute;top:-6px;bottom:-6px;width:2px;background:var(--charcoal);opacity:.35;}
+  .tick .tick-label{position:absolute;top:-20px;left:50%;transform:translateX(-50%);font-size:10px;font-weight:700;color:var(--charcoal);white-space:nowrap;opacity:.7;}
+  .status-strip{display:flex;flex-wrap:wrap;gap:8px;}
+  .status-chip{border:1px solid var(--line);border-radius:999px;padding:5px 12px;font-size:12px;font-weight:700;background:#fff;cursor:pointer;color:var(--charcoal);display:flex;gap:6px;align-items:center;}
+  .status-chip.active{background:var(--ink);color:#fff;border-color:var(--ink);}
+  .status-chip .count{opacity:.65;font-weight:600;}
+
+  .section-head{display:flex;justify-content:space-between;align-items:center;margin:24px 0 10px;}
+  .section-head h3{font-size:13.5px;font-weight:800;color:var(--ink);margin:0;text-transform:uppercase;letter-spacing:.04em;}
+  .section-head .count-badge{font-size:12px;font-weight:700;color:var(--muted);}
+  .date-group-header{
+    font-size:11px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;
+    margin:14px 0 6px 2px;padding-bottom:4px;border-bottom:1px solid var(--line);
+  }
+  .date-group-header:first-of-type{margin-top:4px;}
+
+  .action-row{
+    background:var(--surface);border-radius:12px;border:1px solid var(--line);padding:11px 14px;
+    display:flex;align-items:center;gap:12px;margin-bottom:8px;cursor:pointer;border-left:4px solid var(--line);
+    box-shadow:0 1px 4px rgba(25,19,71,.05);
+  }
+  .action-row.overdue{border-left-color:var(--orange);}
+  .action-row.today{border-left-color:var(--amber);}
+  .action-row.soon{border-left-color:var(--gold);}
+  .action-row:hover{background:#FFFDF9;}
+  .action-when{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.04em;min-width:74px;color:var(--muted);}
+  .action-row.overdue .action-when{color:var(--orange);}
+  .action-row.today .action-when{color:var(--amber);}
+  .action-body{flex:1;min-width:0;}
+  .action-name{font-weight:700;font-size:13.5px;color:var(--charcoal);}
+  .action-next{font-size:12.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .empty-note{font-size:13px;color:var(--muted);font-style:italic;padding:10px 2px;}
+
+  .today-card{
+    background:var(--surface);border-radius:14px;border:1px solid var(--line);padding:14px 16px;
+    margin-bottom:10px;cursor:pointer;box-shadow:0 2px 10px rgba(25,19,71,.06),0 1px 3px rgba(25,19,71,.04);
+    border-left:5px solid var(--line);
+  }
+  .today-card.overdue{border-left-color:var(--orange);}
+  .today-card.today{border-left-color:var(--amber);}
+  .today-card-top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:8px;}
+  .today-card-who{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+  .today-card-who .pdot{width:8px;height:8px;border-radius:50%;flex:none;}
+  .today-card-name{font-size:14.5px;font-weight:800;color:var(--ink);}
+  .today-card-when{font-size:10.5px;font-weight:800;text-transform:uppercase;letter-spacing:.04em;padding:3px 8px;border-radius:999px;flex:none;}
+  .today-card.overdue .today-card-when{background:rgba(228,89,39,.12);color:var(--orange);}
+  .today-card.today .today-card-when{background:rgba(245,132,32,.14);color:var(--amber);}
+  .today-card-action{font-size:13px;color:var(--charcoal);line-height:1.5;margin-bottom:6px;}
+  .today-card-meta{font-size:11.5px;color:var(--muted);font-weight:600;margin-bottom:10px;}
+  .today-card-buttons{display:flex;gap:6px;flex-wrap:wrap;}
+  .today-card-buttons .qbtn{font-size:11px;padding:5px 9px;}
+
+  .activity-row{display:flex;gap:10px;padding:8px 0;border-bottom:1px solid #F0ECE3;font-size:12.5px;}
+  .activity-row:last-child{border-bottom:none;}
+  .activity-time{color:var(--muted);font-weight:700;min-width:64px;font-size:11px;text-transform:uppercase;}
+  .activity-text{color:var(--charcoal);}
+
+  /* ---------- Contact detail page ---------- */
+  .detail-header{display:flex;justify-content:space-between;align-items:flex-start;gap:14px;margin-bottom:6px;flex-wrap:wrap;}
+  .detail-title-row{display:flex;align-items:center;gap:9px;flex-wrap:wrap;}
+  .detail-title-row .priority-dot{width:9px;height:9px;border-radius:50%;}
+  .priority-High{background:var(--orange);}
+  .priority-Medium{background:var(--amber);}
+  .priority-Low{background:var(--gold);}
+  .detail-name{font-size:22px;font-weight:800;color:var(--ink);}
+  .badge{font-size:10.5px;font-weight:700;padding:3px 9px;border-radius:999px;background:#F0ECE3;color:var(--charcoal);white-space:nowrap;}
+  .badge.status-pill{color:#fff;}
+  .detail-sub{font-size:13px;color:var(--muted);font-weight:600;margin:4px 0 16px;}
+  .detail-ask{font-size:15px;font-weight:800;color:var(--ink);text-align:right;}
+  .detail-ask .fb{display:block;font-size:11px;font-weight:600;color:var(--muted);}
+
+  .quick-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px;}
+  .qbtn{font-size:12px;font-weight:700;padding:7px 12px;border-radius:8px;border:1px solid var(--line);background:#fff;cursor:pointer;color:var(--charcoal);}
+  .qbtn:hover{background:#F7F5F1;}
+  .qbtn.primary{background:var(--ink);color:#fff;border-color:var(--ink);}
+  .qbtn.commit{background:var(--gold);border-color:var(--gold);color:var(--charcoal);}
+  .qbtn.decline{background:#fff;color:var(--muted);}
+  .qbtn.ai{background:linear-gradient(90deg,#191347,#3a2f7a);color:#fff;border:none;display:inline-flex;align-items:center;gap:5px;}
+  .qbtn.ai:hover{opacity:.92;}
+  .qbtn[disabled]{opacity:.6;cursor:wait;}
+
+  .ai-draft-panel{border:1px solid var(--line);border-radius:14px;padding:16px;background:#F7F5FF;margin-bottom:20px;box-shadow:0 2px 10px rgba(25,19,71,.06),0 1px 3px rgba(25,19,71,.04);}
+  .ai-draft-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
+  .ai-draft-head h4{margin:0;font-size:11.5px;text-transform:uppercase;letter-spacing:.04em;color:var(--ink);}
+  .ai-draft-panel textarea{width:100%;min-height:200px;font-family:inherit;font-size:13px;line-height:1.5;padding:10px;border-radius:9px;border:1px solid var(--line);background:#fff;color:var(--charcoal);resize:vertical;}
+  .ai-draft-actions{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;}
+  .ai-loading{font-size:12.5px;color:var(--muted);font-style:italic;padding:4px 2px;}
+
+  .card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:18px 20px;box-shadow:0 2px 10px rgba(25,19,71,.06),0 1px 3px rgba(25,19,71,.04);}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+  @media(max-width:640px){.grid2{grid-template-columns:1fr;}}
+  .field{margin-bottom:10px;}
+  .field label{display:block;font-size:10.5px;font-weight:800;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);margin-bottom:4px;}
+  .field input, .field select, .field textarea{width:100%;font-family:inherit;font-size:13px;padding:7px 9px;border-radius:8px;border:1px solid var(--line);background:#fff;color:var(--charcoal);}
+  .field textarea{resize:vertical;min-height:50px;}
+  .full{grid-column:1/-1;}
+  .detail-actions{display:flex;justify-content:space-between;margin-top:10px;}
+  .save-btn{background:var(--ink);color:#fff;border:none;padding:9px 20px;border-radius:9px;font-weight:700;font-size:13px;cursor:pointer;}
+  .del-btn{background:none;border:none;color:var(--muted);font-size:12px;cursor:pointer;text-decoration:underline;}
+
+  /* ---------- Playbook page ---------- */
+  .ref-card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px;margin-bottom:14px;box-shadow:0 2px 10px rgba(25,19,71,.06),0 1px 3px rgba(25,19,71,.04);}
+  .ref-card h4{margin:0 0 10px;font-size:12.5px;text-transform:uppercase;letter-spacing:.04em;color:var(--ink);}
+  table{width:100%;border-collapse:collapse;font-size:12.5px;}
+  th{text-align:left;color:var(--muted);font-size:10.5px;text-transform:uppercase;padding:5px 6px;border-bottom:1px solid var(--line);}
+  td{padding:7px 6px;border-bottom:1px solid #F0ECE3;}
+  .step-row{display:flex;gap:10px;padding:7px 0;border-bottom:1px solid #F0ECE3;font-size:12.5px;}
+  .step-row:last-child{border-bottom:none;}
+  .step-num{font-weight:800;color:var(--orange);min-width:16px;}
+  ul.notes{margin:0;padding-left:18px;font-size:12.5px;line-height:1.6;color:var(--charcoal);}
+
+  #loading{padding:60px 0;text-align:center;color:var(--muted);font-weight:600;}
+  #toast{
+    position:fixed;bottom:20px;left:50%;transform:translateX(-50%);
+    background:var(--charcoal);color:#fff;padding:9px 18px;border-radius:999px;font-size:12.5px;
+    font-weight:600;opacity:0;pointer-events:none;transition:opacity .25s;z-index:99;
+  }
+  #toast.show{opacity:1;}
+
+  @media(max-width:620px){
+    #app{flex-direction:column;height:auto;overflow:visible;}
+    .sidebar{width:100%;height:auto;border-right:none;border-bottom:1px solid var(--line);}
+    .contact-list{max-height:260px;}
+    .main{overflow:visible;height:auto;}
+    .main-inner{padding:18px 16px 60px;}
+  }
+</style>
+</head>
+<body>
+<div id="app"><div id="loading">Loading tracker…</div></div>
+<div id="toast"></div>
+
+<script>
+const SHEETDB_URL = 'https://sheetdb.io/api/v1/crculjmyngrje';
+const ROW_KEY = 'tgt2026-data';
+
+const SEED_CONTACTS = [
+  {id:'bailey-farms', name:'Bailey Farms', type:'Renewal', htiPOC:'Mark', priorDonation:1000, suggestedAsk:1000, fallbackAsk:1000, priority:'High', location:'Oxford', contactName:'Randy Bailey', title:'Owner', email:'rbailey@baileyfarmsinc.com', phone:'', personalNotes:'Randy Bailey is a long-time family friend, personal relationship', messageAngle:'Thank them for prior $1,000 support; invite renewal for TGT 2026.', packet:'Oxford packet - date checked 9/19/26', firstEmailDate:'2026-07-06', status:'Not Started', lastContacted:'', followUpDate:'2026-07-09', followUpMethod:'Email + phone follow-up', outcome:'Open', committedAmount:'', silentAuction:'No', nextAction:'Add contact info + personal notes; schedule Monday email.', notes:'', draftContent:'', draftFormat:'email'},
+  {id:'margier-white', name:'Margier White State Farm', type:'Renewal / Upgrade', htiPOC:'Mark', priorDonation:550, suggestedAsk:1000, fallbackAsk:550, priority:'High', location:'Henderson; Financial Services', contactName:'Margier White', title:'Agent', email:'margier.white.flyh@statefarm.com', phone:'252 598 0163', personalNotes:"I don't know her personally, but she was Don's insurance agent and is very active in Vance county activities", messageAngle:'Local Henderson business; prior sponsor; possible upgrade from Basic OS to Reboot.', packet:'Corrected Henderson packet needed - verify 9/19/26', firstEmailDate:'2026-07-06', status:'Committed', lastContacted:'', followUpDate:'2026-07-09', followUpMethod:'Email + phone follow-up', outcome:'Open', committedAmount:'', silentAuction:'No', nextAction:'Add contact info + personal notes; schedule Monday email.', notes:'', draftContent:'', draftFormat:'email'},
+  {id:'charles-boyd-ford', name:'Charles Boyd Ford', type:'Renewal / Upgrade', htiPOC:'Ron/Mark', priorDonation:550, suggestedAsk:1000, fallbackAsk:550, priority:'High', location:'Oxford', contactName:'Thomas May', title:'Sales Mgr', email:'thomas.may@boydauto.com', phone:'919-693-7196', personalNotes:"the manager we would contact there was instrumental in working with us to get our van a couple of years ago. hard to get in contact with. there's a potential Ron may want to reach out", messageAngle:'Thank them for prior support; ask for renewal and possible move to $1,000 Reboot level.', packet:'Oxford packet - date checked 9/19/26', firstEmailDate:'2026-07-06', status:'Not Started', lastContacted:'', followUpDate:'2026-07-09', followUpMethod:'Email + phone follow-up', outcome:'Open', committedAmount:'', silentAuction:'No', nextAction:'Add contact info + personal notes; schedule Monday email.', notes:'', draftContent:'', draftFormat:'email'},
+  {id:'winston-intl', name:'Winston International', type:'Renewal / Upgrade', htiPOC:'Mark', priorDonation:550, suggestedAsk:1000, fallbackAsk:550, priority:'High', location:'Oxford; Tech Supplier', contactName:'Francis Winston', title:'CEO', email:'frawinston@winstonele.com', phone:'(919) 693-1561', personalNotes:'I went to high school with Francis Winston. We reconnected last year after many years, he runs a successful business', messageAngle:'Technology alignment makes this a natural sponsor; ask for renewed or increased support.', packet:'Oxford packet - date checked 9/19/26', firstEmailDate:'2026-07-06', status:'Not Started', lastContacted:'', followUpDate:'2026-07-09', followUpMethod:'Email + phone follow-up', outcome:'Open', committedAmount:'', silentAuction:'No', nextAction:'Add contact info + personal notes; schedule Monday email.', notes:'', draftContent:'', draftFormat:'email'},
+  {id:'grro', name:'GRRO', type:'New Prospect', htiPOC:'Mark', priorDonation:'', suggestedAsk:550, fallbackAsk:'', priority:'Medium', location:'Henderson', contactName:'', title:'', email:'', phone:'', personalNotes:'i want to consult with Stephen Wolf before contacting him', messageAngle:'Local Henderson/community connection; entry-level Basic OS ask or silent auction item.', packet:'Corrected Henderson packet needed - verify 9/19/26', firstEmailDate:'2026-07-06', status:'Not Started', lastContacted:'', followUpDate:'2026-07-09', followUpMethod:'Intro email + call', outcome:'Open', committedAmount:'', silentAuction:'Maybe', nextAction:'Add contact info + personal notes; schedule Monday email.', notes:'', draftContent:'', draftFormat:'email'},
+  {id:'mast-drug', name:'Mast Drug', type:'New Prospect', htiPOC:'Mark', priorDonation:'', suggestedAsk:550, fallbackAsk:'', priority:'Medium', location:'Henderson', contactName:'Richard Flye', title:'CEO', email:'rflye@mastdrug.com', phone:'(252)438-3112', personalNotes:"our landlords. the owner has not been super friendly toward us, not sure he's a good candidate, but i do want to reach out. he's just been a tough nut to crack", messageAngle:'Community-facing local business; Basic OS ask or silent auction item.', packet:'General/local packet - verify best version', firstEmailDate:'2026-07-06', status:'Not Started', lastContacted:'', followUpDate:'2026-07-09', followUpMethod:'Intro email + call', outcome:'Open', committedAmount:'', silentAuction:'Maybe', nextAction:'Add contact info + personal notes; schedule Monday email.', notes:'', draftContent:'', draftFormat:'email'},
+  {id:'roses', name:'Roses', type:'New Prospect', htiPOC:'Mark', priorDonation:'', suggestedAsk:550, fallbackAsk:'', priority:'Medium', location:'Henderson', contactName:'', title:'VP - IT', email:'', phone:'', personalNotes:'I worked for many years at Roses, not sure that matters, but there it is. I have recently reached to their VP of IT who orchestrated a donation to us a couple of years ago, with no response. Not sure how to handle this one', messageAngle:'Likely needs local manager plus corporate/community giving route; ask for sponsor or auction item.', packet:'General/local packet - verify best version', firstEmailDate:'2026-07-06', status:'Not Started', lastContacted:'', followUpDate:'2026-07-09', followUpMethod:'Intro email + ask for correct contact', outcome:'Open', committedAmount:'', silentAuction:'Maybe', nextAction:'Add contact info + personal notes; schedule Monday email.', notes:'', draftContent:'', draftFormat:'email'}
+];
+
+const CONFIG = { eventDate:'2026-09-19', knownPriorGiving:2650, baselineTarget:4300, suggestedTarget:5650, stretchTarget:6000 };
+
+const STATUS_OPTIONS = ['Not Started','Needs Personal Intel','Email Scheduled','Initial Email Sent','Called','Visit Scheduled','Committed','Declined','Follow Up Later','Closed'];
+const OUTCOME_OPTIONS = ['Open','Committed','Declined','Silent Auction Only','Follow Up Later'];
+const SILENT_OPTIONS = ['No','Yes','Maybe'];
+const PRIORITY_OPTIONS = ['High','Medium','Low'];
+
+const STATUS_COLOR = {
+  'Committed':'#1E8E5A','Declined':'#83808c','Closed':'#83808c',
+  'Not Started':'#83808c','Needs Personal Intel':'#F58420','Email Scheduled':'#F58420',
+  'Initial Email Sent':'#F58420','Called':'#F58420','Visit Scheduled':'#E45927','Follow Up Later':'#E45927'
+};
+
+const SPONSOR_LEVELS = [
+  {level:'Basic OS', amount:550, notes:'Free tickets, thank-you letter, and social media recognition.'},
+  {level:'Reboot', amount:1000, notes:'Basic OS benefits plus newsletter recognition.'},
+  {level:'Powerhouse', amount:5000, notes:'Reboot benefits plus logo on website and annual report recognition.'},
+  {level:'Chromium', amount:10000, notes:'Powerhouse benefits plus recognition at HTI events and logo on TGT orange carpet photo backdrop.'}
+];
+
+const CADENCE = [
+  {step:1, timing:'Monday 7/6/2026', action:'Send first personalized email to all seven Mark-related contacts.', purpose:'Open or renew the conversation before schedules get crowded.'},
+  {step:2, timing:'Wed–Thu 7/8–7/9', action:'Call or send a very short reply-forward follow-up to prior sponsors first.', purpose:'Prior sponsors are the highest-probability wins.'},
+  {step:3, timing:'Monday 7/13', action:'Send second-touch email to anyone who has not responded.', purpose:'Keep momentum without sounding desperate.'},
+  {step:4, timing:'Week of 7/20', action:'Escalate to visit/referral/alternate contact where appropriate.', purpose:'Move stalled prospects into a real conversation.'},
+  {step:5, timing:'Ongoing', action:'Log every response, commitment amount, and next action in the tracker.', purpose:'Avoid losing warm leads or duplicating asks.'}
+];
+
+const WORKING_NOTES = [
+  'Ignore any source notes that referenced Don making visits — those were intentionally not carried into the action plan.',
+  "Don't send a packet with the wrong event date. Use 9/19/26 materials only; Henderson/general packets should be checked before attachment.",
+  'Baseline target assumes prior sponsors renew at last year\u2019s amount and new prospects come in at Basic OS. Suggested target assumes selected $550 sponsors upgrade to $1,000.',
+  'For new prospects, the first email should seek a conversation and offer a $550 Basic OS sponsorship or silent auction contribution.'
+];
+
+const DRAFT_FORMAT_LABEL = { email:'Email', text:'Text', call:'Talk Track' };
+
+let STATE = { contacts: [], config: CONFIG, activity: [], typeFilter:'all', statusFilter:'all', sortBy:'priority', view:'dashboard', syncStatus:'loading', lastSync:null };
+let draftLoadingIds = new Set();
+
+function fmtMoney(n){
+  if(n === '' || n === null || n === undefined || isNaN(n)) return '—';
+  return '$' + Number(n).toLocaleString();
+}
+function todayStr(){ return new Date().toISOString().slice(0,10); }
+function daysBetween(a,b){
+  const A = new Date(a+'T00:00:00'), B = new Date(b+'T00:00:00');
+  return Math.round((B-A)/86400000);
+}
+function fmtDateShort(iso){
+  if(!iso) return '';
+  return new Date(iso+'T00:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric'});
+}
+function fmtDateHeader(iso){
+  if(!iso) return '';
+  return new Date(iso+'T00:00:00').toLocaleDateString('en-US',{weekday:'short', month:'short', day:'numeric'});
+}
+function groupByDate(items){
+  const groups = {};
+  items.forEach(item=>{
+    const key = item.c.followUpDate;
+    if(!groups[key]) groups[key] = [];
+    groups[key].push(item);
+  });
+  return Object.keys(groups).sort().map(date => ({ date, items: groups[date] }));
+}
+function relativeTime(iso){
+  const diffMs = Date.now() - new Date(iso).getTime();
+  const mins = Math.floor(diffMs/60000);
+  if(mins < 1) return 'now';
+  if(mins < 60) return mins+'m ago';
+  const hrs = Math.floor(mins/60);
+  if(hrs < 24) return hrs+'h ago';
+  const days = Math.floor(hrs/24);
+  if(days < 7) return days+'d ago';
+  return new Date(iso).toLocaleDateString('en-US',{month:'short',day:'numeric'});
+}
+
+async function loadData(){
+  STATE.syncStatus = 'loading';
+  render();
+  try{
+    const res = await fetch(`${SHEETDB_URL}/search?key=${ROW_KEY}`);
+    if(!res.ok) throw new Error('SheetDB GET failed: ' + res.status);
+    const rows = await res.json();
+    if(Array.isArray(rows) && rows.length > 0 && rows[0].value){
+      const parsed = JSON.parse(rows[0].value);
+      STATE.contacts = parsed.contacts || JSON.parse(JSON.stringify(SEED_CONTACTS));
+      STATE.config = parsed.config || CONFIG;
+      STATE.activity = parsed.activity || [];
+      STATE.syncStatus = 'ok';
+      STATE.lastSync = new Date().toISOString();
+    } else {
+      // No row yet -- first time this sheet has been used. Seed it.
+      STATE.contacts = JSON.parse(JSON.stringify(SEED_CONTACTS));
+      STATE.config = CONFIG;
+      STATE.activity = [];
+      await saveData(true);
+    }
+  } catch(e){
+    console.error('Load from SheetDB failed', e);
+    STATE.syncStatus = 'error';
+    // Fall back to in-memory defaults so the app is still usable, but nothing
+    // will persist until the sheet connection is fixed.
+    if(STATE.contacts.length === 0){
+      STATE.contacts = JSON.parse(JSON.stringify(SEED_CONTACTS));
+      STATE.config = CONFIG;
+      STATE.activity = [];
+    }
+    showToast('Could not reach the tracker sheet — check connection');
+  }
+  render();
+}
+
+async function saveData(isInitialSeed){
+  STATE.syncStatus = 'syncing';
+  render();
+  const payload = JSON.stringify({contacts:STATE.contacts, config:STATE.config, activity:STATE.activity});
+  const nowIso = new Date().toISOString();
+  try{
+    if(isInitialSeed){
+      const res = await fetch(SHEETDB_URL, {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ data: { key: ROW_KEY, value: payload, updated_at: nowIso } })
+      });
+      if(!res.ok) throw new Error('SheetDB POST failed: ' + res.status);
+    } else {
+      const res = await fetch(`${SHEETDB_URL}/key/${ROW_KEY}`, {
+        method:'PATCH',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ data: { value: payload, updated_at: nowIso } })
+      });
+      if(!res.ok) throw new Error('SheetDB PATCH failed: ' + res.status);
+      const result = await res.json();
+      // SheetDB returns {updated: 0} if no row matched -- meaning the row
+      // doesn't exist yet, so fall back to creating it.
+      if(result && result.updated === 0){
+        const createRes = await fetch(SHEETDB_URL, {
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({ data: { key: ROW_KEY, value: payload, updated_at: nowIso } })
+        });
+        if(!createRes.ok) throw new Error('SheetDB fallback POST failed: ' + createRes.status);
+      }
+    }
+    STATE.syncStatus = 'ok';
+    STATE.lastSync = nowIso;
+  } catch(e){
+    console.error('Save to SheetDB failed', e);
+    STATE.syncStatus = 'error';
+    showToast('Save failed — changes are only local until this reconnects');
+  }
+  render();
+}
+
+function logActivity(text){
+  STATE.activity.unshift({ts:new Date().toISOString(), text});
+  STATE.activity = STATE.activity.slice(0,40);
+}
+
+function showToast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 1600);
+}
+
+function getContact(id){ return STATE.contacts.find(c=>c.id===id); }
+
+function updateContact(id, patch){
+  const c = getContact(id);
+  if(!c) return;
+  Object.assign(c, patch);
+  saveData();
+}
+
+function selectView(v){ STATE.view = v; render(); }
+
+function quickAction(id, action){
+  const c = getContact(id);
+  const today = todayStr();
+  if(action==='sent'){ updateContact(id, {status:'Initial Email Sent', lastContacted:today}); logActivity(`Sent email — ${c.name}`); }
+  if(action==='called'){ updateContact(id, {status:'Called', lastContacted:today}); logActivity(`Called — ${c.name}`); }
+  if(action==='commit'){
+    const amt = prompt('Committed amount ($)?', c.suggestedAsk || '');
+    if(amt===null) return;
+    updateContact(id, {status:'Committed', outcome:'Committed', committedAmount:Number(amt)||0, lastContacted:today});
+    logActivity(`Committed ${fmtMoney(Number(amt)||0)} — ${c.name}`);
+  }
+  if(action==='decline'){ updateContact(id, {status:'Declined', outcome:'Declined', lastContacted:today}); logActivity(`Declined — ${c.name}`); }
+  if(action==='followup'){ updateContact(id, {status:'Follow Up Later', outcome:'Follow Up Later'}); logActivity(`Pushed to follow up later — ${c.name}`); }
+  saveData();
+  showToast('Updated ' + c.name);
+  render();
+}
+
+function addContact(){
+  const id = 'contact-' + Date.now();
+  STATE.contacts.push({
+    id, name:'New Prospect', type:'New Prospect', htiPOC:'Mark', priorDonation:'', suggestedAsk:550, fallbackAsk:'',
+    priority:'Medium', location:'', contactName:'', title:'', email:'', phone:'', personalNotes:'', messageAngle:'',
+    packet:'', firstEmailDate:'', status:'Not Started', lastContacted:'', followUpDate:'', followUpMethod:'',
+    outcome:'Open', committedAmount:'', silentAuction:'Maybe', nextAction:'Add contact info + personal notes.', notes:'', draftContent:'', draftFormat:'email'
+  });
+  logActivity('Added new prospect to tracker');
+  STATE.view = id;
+  saveData();
+  render();
+}
+
+function deleteContact(id){
+  const c = getContact(id);
+  if(!confirm('Remove this contact from the tracker? This can\'t be undone.')) return;
+  STATE.contacts = STATE.contacts.filter(x=>x.id!==id);
+  logActivity(`Removed contact — ${c.name}`);
+  STATE.view = 'dashboard';
+  saveData();
+  render();
+}
+
+function setTypeFilter(v){ STATE.typeFilter = v; render(); }
+function setStatusFilter(v){ STATE.statusFilter = v; render(); }
+function setSortFilter(v){ STATE.sortBy = v; render(); }
+
+function computeActionUrgency(c){
+  if(!c.followUpDate) return null;
+  if(['Committed','Declined','Closed'].includes(c.status)) return null;
+  const diff = daysBetween(todayStr(), c.followUpDate);
+  if(diff < 0) return 'overdue';
+  if(diff === 0) return 'today';
+  if(diff <= 3) return 'soon';
+  return 'upcoming';
+}
+
+function saveCardForm(id){
+  const c = getContact(id);
+  const prevStatus = c.status;
+  const get = (field)=>document.getElementById(`f-${id}-${field}`).value;
+  const patch = {
+    name:get('name'), type:get('type'), htiPOC:get('htiPOC'),
+    priorDonation:get('priorDonation'), suggestedAsk:get('suggestedAsk'), fallbackAsk:get('fallbackAsk'),
+    priority:get('priority'), location:get('location'), contactName:get('contactName'), title:get('title'),
+    email:get('email'), phone:get('phone'), personalNotes:get('personalNotes'), messageAngle:get('messageAngle'),
+    packet:get('packet'), firstEmailDate:get('firstEmailDate'), status:get('status'), lastContacted:get('lastContacted'),
+    followUpDate:get('followUpDate'), followUpMethod:get('followUpMethod'), outcome:get('outcome'),
+    committedAmount:get('committedAmount'), silentAuction:get('silentAuction'), nextAction:get('nextAction'), notes:get('notes')
+  };
+  patch.priorDonation = patch.priorDonation===''?'':Number(patch.priorDonation);
+  patch.suggestedAsk = patch.suggestedAsk===''?'':Number(patch.suggestedAsk);
+  patch.fallbackAsk = patch.fallbackAsk===''?'':Number(patch.fallbackAsk);
+  patch.committedAmount = patch.committedAmount===''?'':Number(patch.committedAmount);
+  updateContact(id, patch);
+  if(patch.status !== prevStatus) logActivity(`Status changed to "${patch.status}" — ${patch.name}`);
+  else logActivity(`Updated details — ${patch.name}`);
+  saveData();
+  showToast('Saved ' + patch.name);
+  render();
+}
+
+function buildDraftPrompt(c, feedback){
+  const format = c.draftFormat || 'email';
+  const stageGuidance = {
+    'Not Started': "This is the FIRST-TOUCH contact. Open warmly, reference the personal connection if one exists, and make a clear, specific ask.",
+    'Needs Personal Intel': "This is the FIRST-TOUCH contact. Keep it warm and simple since Mark doesn't have much personal history with this contact yet.",
+    'Email Scheduled': "This is the FIRST-TOUCH contact, ready to go.",
+    'Initial Email Sent': "This is a FOLLOW-UP / second-touch contact. Reference that Mark reached out before, keep it short and low-pressure, and gently re-surface the ask without sounding pushy.",
+    'Called': "This is a FOLLOW-UP after a phone conversation. Reference the call briefly and confirm next steps or the ask.",
+    'Visit Scheduled': "This is a short confirmation/logistics touch ahead of an in-person visit.",
+    'Follow Up Later': "This is a gentle check-back after some time has passed. Keep it brief, low-pressure, and easy to say yes or no to.",
+    'Committed': "This is a THANK-YOU / confirmation for a sponsorship they've already committed to. Confirm the amount and sponsor level, thank them warmly, and outline what happens next.",
+    'Declined': "Do not make an ask. Keep it a short, gracious thank-you-for-considering-us note that leaves the door open for the future.",
+    'Closed': "Keep it a short, gracious closing note."
+  };
+  const guidance = stageGuidance[c.status] || stageGuidance['Not Started'];
+  const askAmount = c.status==='Committed' ? (c.committedAmount || c.suggestedAsk) : c.suggestedAsk;
+  const fallback = c.fallbackAsk ? `If the full ask feels like too much, a fallback of $${c.fallbackAsk} (or a silent auction item) is a fine landing spot.` : '';
+
+  const sharedContext = `You are helping Mark Williams, Executive Director of HUBZone Technology Initiative (HTI), a nonprofit in Henderson, NC that refurbishes donated laptops, distributes them free to students and families, and runs digital literacy programs. Mark is doing outreach for HTI's annual fundraiser, TGT 2026, happening September 19, 2026.
+
+Match Mark's voice: direct, warm, plain-spoken, no corporate fundraising boilerplate, no over-explaining. Sound like a real person, not a template.
+
+CONTACT: ${c.name}${c.contactName ? ' (contact: '+c.contactName+(c.title?', '+c.title:'')+')' : ' (no named contact yet -- speak to the organization generally)'}
+RELATIONSHIP TYPE: ${c.type}
+PERSONAL CONNECTION / NOTES: ${c.personalNotes || 'None on file -- keep it professional and warm rather than presuming familiarity.'}
+MESSAGE ANGLE: ${c.messageAngle || 'General sponsorship ask.'}
+PRIOR DONATION: ${c.priorDonation ? '$'+c.priorDonation+' (this is a renewal/upgrade conversation)' : 'None -- this is a new prospect.'}
+THE ASK: $${askAmount || 550}. ${fallback}
+CURRENT STAGE: ${c.status} -- ${guidance}
+
+Sponsor levels for reference (name the specific level only if it helps, don't over-explain the tiers): Basic OS $550, Reboot $1,000, Powerhouse $5,000, Chromium $10,000.`;
+
+  const formatSpec = {
+    text: 'a TEXT MESSAGE Mark can send from his phone. Under 320 characters. No subject line, no formal salutation, no letter-style closing -- just a short, warm, direct message a person actually texts. One clear point or ask.',
+    call: 'a short PHONE CALL TALK TRACK for Mark to glance at while dialing -- not a word-for-word script, but tight talking points: an opening line, 1-2 key points to hit, the specific ask stated plainly, and a natural closing line.',
+    email: 'ONE short, personal sponsorship EMAIL. Short paragraphs, a subject line on the first line prefixed "Subject:", then a blank line, then the body.'
+  }[format];
+
+  const outputReminder = `No preamble, no explanation, no markdown formatting${format==='email' ? ', no signature block beyond "Mark" or "Mark Williams, HTI"' : ''}, no meta-commentary about what changed.`;
+
+  // Targeted revision of an existing draft, using Mark's specific feedback
+  if(feedback && feedback.trim() && c.draftContent){
+    return `${sharedContext}
+
+Mark already has this draft:
+"""
+${c.draftContent}
+"""
+
+He wants it revised with this specific feedback: "${feedback.trim()}"
+
+Revise the draft to address that feedback directly, while keeping it ${formatSpec}
+
+Output ONLY the revised version. ${outputReminder}`;
+  }
+
+  // Fresh generation
+  return `${sharedContext}
+
+Write ${formatSpec}
+
+Output ONLY the ${DRAFT_FORMAT_LABEL[format].toLowerCase()} itself. ${outputReminder}`;
+}
+
+async function draftContentAI(id, feedback){
+  const c = getContact(id);
+  if(!c) return;
+  draftLoadingIds.add(id);
+  render();
+  try{
+    const response = await fetch("/api/draft", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ prompt: buildDraftPrompt(c, feedback) })
+    });
+    if(!response.ok){
+      const errBody = await response.json().catch(()=>({}));
+      throw new Error(errBody.error || ('Proxy returned ' + response.status));
+    }
+    const data = await response.json();
+    const text = (data.content || []).filter(b => b.type === 'text').map(b => b.text).join('\n').trim();
+    if(!text) throw new Error('Empty response');
+    updateContact(id, { draftContent: text });
+    logActivity(`${feedback && feedback.trim() ? 'Revised' : 'Drafted'} ${DRAFT_FORMAT_LABEL[c.draftFormat||'email'].toLowerCase()} — ${c.name}`);
+    saveData();
+  } catch(e){
+    console.error('Draft generation failed', e);
+    showToast('Draft failed — check /api/draft setup');
+  } finally {
+    draftLoadingIds.delete(id);
+    render();
+  }
+}
+
+function setDraftFormat(id, format){
+  updateContact(id, { draftFormat: format });
+  render();
+}
+
+function copyDraft(id){
+  const el = document.getElementById(`draft-${id}`);
+  const c = getContact(id);
+  const text = el ? el.value : (c ? c.draftContent : '');
+  if(!text) return;
+  navigator.clipboard.writeText(text).then(()=>showToast('Copied to clipboard'))
+    .catch(()=>showToast('Copy failed — select the text manually'));
+}
+
+function saveDraftEdit(id){
+  const val = document.getElementById(`draft-${id}`).value;
+  updateContact(id, { draftContent: val });
+  showToast('Draft saved');
+}
+
+/* ============================ RENDER ============================ */
+
+function render(){
+  const app = document.getElementById('app');
+  app.innerHTML = `${renderSidebar()}<div class="main"><div class="main-inner">${renderMain()}</div></div>`;
+}
+
+function renderSidebar(){
+  const contacts = STATE.contacts.slice();
+  let visible = contacts;
+  if(STATE.typeFilter!=='all') visible = visible.filter(c=>c.type===STATE.typeFilter);
+  if(STATE.statusFilter!=='all') visible = visible.filter(c=>c.status===STATE.statusFilter);
+  const priorityRank = {High:0,Medium:1,Low:2};
+  if(STATE.sortBy==='followup') visible.sort((a,b)=>(a.followUpDate||'9999').localeCompare(b.followUpDate||'9999'));
+  else if(STATE.sortBy==='name') visible.sort((a,b)=>a.name.localeCompare(b.name));
+  else visible.sort((a,b)=>priorityRank[a.priority]-priorityRank[b.priority]);
+
+  return `
+  <div class="sidebar">
+    <div class="sidebar-header">
+      <div class="brand-row">
+        <div class="logo-chip"><img src="icons/favicon-192.png" alt=""></div>
+        <h1>TGT 2026</h1>
+      </div>
+      <div class="sub">Sponsor Outreach · Henderson, NC</div>
+      <div class="sync-status ${STATE.syncStatus}">
+        <div class="sync-dot"></div>
+        ${STATE.syncStatus==='ok' ? 'Synced' + (STATE.lastSync ? ' ' + relativeTime(STATE.lastSync) : '') : ''}
+        ${STATE.syncStatus==='syncing' ? 'Saving…' : ''}
+        ${STATE.syncStatus==='loading' ? 'Loading…' : ''}
+        ${STATE.syncStatus==='error' ? 'Sync failed — check connection' : ''}
+      </div>
+    </div>
+    <div class="nav-row">
+      <button class="nav-btn ${STATE.view==='dashboard'?'active':''}" onclick="selectView('dashboard')">Dashboard</button>
+      <button class="nav-btn ${STATE.view==='playbook'?'active':''}" onclick="selectView('playbook')">Playbook</button>
+    </div>
+    <button class="add-btn-side" onclick="addContact()">+ Add contact</button>
+    <div class="side-filters">
+      <select onchange="setTypeFilter(this.value)">
+        <option value="all">All types</option>
+        <option value="Renewal" ${STATE.typeFilter==='Renewal'?'selected':''}>Renewal</option>
+        <option value="Renewal / Upgrade" ${STATE.typeFilter==='Renewal / Upgrade'?'selected':''}>Renewal/Upgrade</option>
+        <option value="New Prospect" ${STATE.typeFilter==='New Prospect'?'selected':''}>New Prospect</option>
+      </select>
+      <select onchange="setSortFilter(this.value)">
+        <option value="priority">Priority</option>
+        <option value="followup">Follow-up</option>
+        <option value="name">Name</option>
+      </select>
+    </div>
+    <div class="contact-list">
+      ${visible.length===0 ? '<div class="empty-list">No contacts match this filter.</div>' : ''}
+      ${visible.map(c=>{
+        const urgency = computeActionUrgency(c);
+        return `
+        <div class="contact-row ${STATE.view===c.id?'selected':''} ${c.status==='Committed'?'committed':''}" onclick="selectView('${c.id}')">
+          <div class="pdot priority-${c.priority}"></div>
+          <div class="crow-main">
+            <div class="crow-name">${c.name}</div>
+            <div class="crow-sub">${fmtMoney(c.suggestedAsk)} · ${c.status}</div>
+          </div>
+          ${urgency==='overdue' || urgency==='today' ? '<div class="crow-urgent"></div>' : ''}
+          <div class="crow-status" style="background:${STATUS_COLOR[c.status]||'#83808c'}"></div>
+        </div>`;
+      }).join('')}
+    </div>
+  </div>`;
+}
+
+function renderMain(){
+  if(STATE.view==='dashboard') return renderDashboard();
+  if(STATE.view==='playbook') return renderPlaybook();
+  const c = getContact(STATE.view);
+  if(!c){ STATE.view='dashboard'; return renderDashboard(); }
+  return renderContactDetail(c);
+}
+
+function renderDashboard(){
+  const contacts = STATE.contacts;
+  const committedTotal = contacts.filter(c=>c.status==='Committed').reduce((sum,c)=>sum+(Number(c.committedAmount)||Number(c.suggestedAsk)||0),0);
+  const daysToEvent = daysBetween(todayStr(), STATE.config.eventDate);
+  const cadenceToday = CADENCE.find(s=>s.timing.includes('7/13'));
+
+  const counts = {};
+  STATUS_OPTIONS.forEach(s=>counts[s]=0);
+  contacts.forEach(c=>counts[c.status]=(counts[c.status]||0)+1);
+
+  const actionable = contacts.map(c=>({c, urgency:computeActionUrgency(c)})).filter(x=>x.urgency)
+    .sort((a,b)=>(a.c.followUpDate||'9999').localeCompare(b.c.followUpDate||'9999'));
+  const todayItems = actionable.filter(x=>x.urgency==='overdue' || x.urgency==='today');
+  const upcomingItems = actionable.filter(x=>x.urgency==='soon' || x.urgency==='upcoming');
+  const noDateContacts = contacts.filter(c=>!c.followUpDate && !['Committed','Declined','Closed'].includes(c.status));
+
+  const barMax = STATE.config.stretchTarget * 1.05;
+  const fillPct = Math.min(100, (committedTotal / barMax) * 100);
+  const baselinePct = (STATE.config.baselineTarget / barMax) * 100;
+  const suggestedPct = (STATE.config.suggestedTarget / barMax) * 100;
+  const stretchPct = (STATE.config.stretchTarget / barMax) * 100;
+
+  return `
+    <div class="topbar">
+      <div class="title-block">
+        <h2>Dashboard</h2>
+        <div class="sub">Event: ${fmtDateShort(STATE.config.eventDate)}, 2026</div>
+      </div>
+      <div class="countdown"><div class="num">${daysToEvent}</div><div class="lbl">days to TGT</div></div>
+    </div>
+    ${cadenceToday ? `<div class="today-banner"><div class="dot"></div><div class="txt"><b>Today's move (Step ${cadenceToday.step}):</b> ${cadenceToday.action}</div></div>` : ''}
+
+    <div class="progress-card">
+      <div class="progress-top">
+        <div class="progress-figure">${fmtMoney(committedTotal)} <span>committed of ${fmtMoney(STATE.config.suggestedTarget)} suggested target</span></div>
+        <div class="progress-targets">Baseline ${fmtMoney(STATE.config.baselineTarget)} &nbsp;·&nbsp; Stretch ${fmtMoney(STATE.config.stretchTarget)}</div>
+      </div>
+      <div class="bar-track">
+        <div class="bar-fill" style="width:${fillPct}%"></div>
+        <div class="tick" style="left:${baselinePct}%"><span class="tick-label">Baseline</span></div>
+        <div class="tick" style="left:${suggestedPct}%"><span class="tick-label">Suggested</span></div>
+        <div class="tick" style="left:${stretchPct}%"><span class="tick-label">Stretch</span></div>
+      </div>
+      <div class="status-strip">
+        ${STATUS_OPTIONS.filter(s=>counts[s]>0).map(s=>`<div class="status-chip ${STATE.statusFilter===s?'active':''}" onclick="setStatusFilter('${STATE.statusFilter===s?'all':s}')">${s} <span class="count">${counts[s]}</span></div>`).join('')}
+      </div>
+    </div>
+
+    <div class="section-head"><h3>Today's Actions</h3><div class="count-badge">${todayItems.length}</div></div>
+    ${todayItems.length===0 ? `<div class="empty-note">Nothing overdue or due today — you're caught up.</div>` : ''}
+    ${todayItems.map(({c,urgency})=>`
+      <div class="today-card ${urgency}" onclick="selectView('${c.id}')">
+        <div class="today-card-top">
+          <div class="today-card-who">
+            <div class="pdot priority-${c.priority}"></div>
+            <span class="today-card-name">${c.name}</span>
+            <span class="badge">${fmtMoney(c.suggestedAsk)}</span>
+            <span class="badge status-pill" style="background:${STATUS_COLOR[c.status]||'#83808c'}">${c.status}</span>
+          </div>
+          <div class="today-card-when">${urgency==='overdue' ? 'Overdue' : 'Due Today'}</div>
+        </div>
+        <div class="today-card-action">${c.nextAction || 'No next action set — open the contact to add one.'}</div>
+        <div class="today-card-meta">${c.followUpMethod ? c.followUpMethod : ''}${c.contactName ? (c.followUpMethod ? ' · ' : '') + c.contactName : ''}</div>
+        <div class="today-card-buttons" onclick="event.stopPropagation()">
+          <button class="qbtn primary" onclick="quickAction('${c.id}','sent')">Mark Sent</button>
+          <button class="qbtn" onclick="quickAction('${c.id}','called')">Mark Called</button>
+          <button class="qbtn commit" onclick="quickAction('${c.id}','commit')">Log Commitment</button>
+          <button class="qbtn" onclick="quickAction('${c.id}','followup')">Follow Up Later</button>
+          <button class="qbtn decline" onclick="quickAction('${c.id}','decline')">Declined</button>
+        </div>
+      </div>`).join('')}
+
+    <div class="section-head"><h3>Coming Up</h3><div class="count-badge">${upcomingItems.length}</div></div>
+    ${upcomingItems.length===0 ? `<div class="empty-note">Nothing on the near horizon.</div>` : ''}
+    ${groupByDate(upcomingItems).map(group => `
+      <div class="date-group-header">${fmtDateHeader(group.date)}</div>
+      ${group.items.map(({c,urgency})=>`
+      <div class="action-row ${urgency}" onclick="selectView('${c.id}')">
+        <div class="action-when">${fmtMoney(c.suggestedAsk)}</div>
+        <div class="action-body"><div class="action-name">${c.name}</div><div class="action-next">${c.nextAction || 'No next action set'}</div></div>
+        <div class="badge status-pill" style="background:${STATUS_COLOR[c.status]||'#83808c'}">${c.status}</div>
+      </div>`).join('')}
+    `).join('')}
+
+    ${noDateContacts.length > 0 ? `
+    <div class="section-head"><h3>Needs a Next Step</h3><div class="count-badge">${noDateContacts.length}</div></div>
+    ${noDateContacts.map(c=>`
+      <div class="action-row" onclick="selectView('${c.id}')">
+        <div class="action-when">No date</div>
+        <div class="action-body"><div class="action-name">${c.name}</div><div class="action-next">${c.nextAction || 'Set a follow-up date'}</div></div>
+        <div class="badge status-pill" style="background:${STATUS_COLOR[c.status]||'#83808c'}">${c.status}</div>
+      </div>`).join('')}` : ''}
+
+    <div class="section-head"><h3>Recent Activity</h3></div>
+    <div class="card">
+      ${STATE.activity.length===0 ? '<div class="empty-note">Nothing logged yet — actions you take (sending, calling, committing) will show up here.</div>' : ''}
+      ${STATE.activity.slice(0,10).map(a=>`<div class="activity-row"><div class="activity-time">${relativeTime(a.ts)}</div><div class="activity-text">${a.text}</div></div>`).join('')}
+    </div>
+  `;
+}
+
+function renderPlaybook(){
+  return `
+    <div class="topbar"><div class="title-block"><h2>Playbook</h2><div class="sub">Reference for outreach cadence &amp; sponsor levels</div></div></div>
+    <div class="ref-card">
+      <h4>Sponsor Levels</h4>
+      <table>
+        <tr><th>Level</th><th>Amount</th><th>Recognition</th></tr>
+        ${SPONSOR_LEVELS.map(l=>`<tr><td><b>${l.level}</b></td><td>${fmtMoney(l.amount)}</td><td>${l.notes}</td></tr>`).join('')}
+      </table>
+    </div>
+    <div class="ref-card">
+      <h4>Round 1 Cadence</h4>
+      ${CADENCE.map(s=>`<div class="step-row"><div class="step-num">${s.step}</div><div><b>${s.timing}</b> — ${s.action}<br><span style="color:#83808c">${s.purpose}</span></div></div>`).join('')}
+    </div>
+    <div class="ref-card">
+      <h4>Working Notes</h4>
+      <ul class="notes">${WORKING_NOTES.map(n=>`<li>${n}</li>`).join('')}</ul>
+    </div>
+  `;
+}
+
+function renderContactDetail(c){
+  const urgency = computeActionUrgency(c);
+  return `
+    <div class="detail-header">
+      <div>
+        <div class="detail-title-row">
+          <div class="priority-dot priority-${c.priority}"></div>
+          <div class="detail-name">${c.name}</div>
+          <span class="badge">${c.type}</span>
+          <span class="badge status-pill" style="background:${STATUS_COLOR[c.status]||'#83808c'}">${c.status}</span>
+        </div>
+        <div class="detail-sub">${c.contactName ? c.contactName+(c.title?', '+c.title:'') : 'Contact not yet added'}${c.location?' · '+c.location:''}</div>
+      </div>
+      <div class="detail-ask">${fmtMoney(c.suggestedAsk)}<span class="fb">fallback ${fmtMoney(c.fallbackAsk)}</span></div>
+    </div>
+
+    <div class="quick-row">
+      <select style="font-family:inherit;font-size:12px;font-weight:700;border-radius:8px;border:1px solid var(--line);padding:7px 8px;" onchange="setDraftFormat('${c.id}', this.value)">
+        <option value="email" ${(c.draftFormat||'email')==='email'?'selected':''}>Email</option>
+        <option value="text" ${c.draftFormat==='text'?'selected':''}>Text message</option>
+        <option value="call" ${c.draftFormat==='call'?'selected':''}>Call talk track</option>
+      </select>
+      <button class="qbtn ai" ${draftLoadingIds.has(c.id)?'disabled':''} onclick="draftContentAI('${c.id}')">✨ ${draftLoadingIds.has(c.id) ? 'Drafting…' : (c.draftContent ? 'Redraft '+DRAFT_FORMAT_LABEL[c.draftFormat||'email'] : 'Draft '+DRAFT_FORMAT_LABEL[c.draftFormat||'email'])}</button>
+      <button class="qbtn primary" onclick="quickAction('${c.id}','sent')">Mark Sent</button>
+      <button class="qbtn" onclick="quickAction('${c.id}','called')">Mark Called</button>
+      <button class="qbtn commit" onclick="quickAction('${c.id}','commit')">Log Commitment</button>
+      <button class="qbtn" onclick="quickAction('${c.id}','followup')">Push to Follow Up Later</button>
+      <button class="qbtn decline" onclick="quickAction('${c.id}','decline')">Mark Declined</button>
+    </div>
+
+    ${draftLoadingIds.has(c.id) ? `<div class="ai-draft-panel"><div class="ai-loading">Drafting a ${DRAFT_FORMAT_LABEL[c.draftFormat||'email'].toLowerCase()} for ${c.name}…</div></div>` : ''}
+    ${(!draftLoadingIds.has(c.id) && c.draftContent) ? `
+    <div class="ai-draft-panel">
+      <div class="ai-draft-head"><h4>AI Draft — ${DRAFT_FORMAT_LABEL[c.draftFormat||'email']} — edit freely before using</h4></div>
+      <textarea id="draft-${c.id}">${c.draftContent}</textarea>
+      <div class="field" style="margin-top:10px;">
+        <label>Want changes on regenerate? Say what (optional)</label>
+        <input id="feedback-${c.id}" type="text" placeholder="e.g. make it shorter / lean more on the van repair story / less formal">
+      </div>
+      <div class="ai-draft-actions">
+        <button class="qbtn primary" onclick="saveDraftEdit('${c.id}')">Save edits</button>
+        <button class="qbtn" onclick="copyDraft('${c.id}')">Copy to clipboard</button>
+        <button class="qbtn ai" onclick="draftContentAI('${c.id}', document.getElementById('feedback-${c.id}').value)">✨ Regenerate</button>
+      </div>
+    </div>` : ''}
+
+    <div class="card">
+      <div class="grid2">
+        ${detailField(c,'name','Sponsor / Prospect name')}
+        ${detailSelect(c,'type','Type',['Renewal','Renewal / Upgrade','New Prospect'])}
+        ${detailField(c,'contactName','Contact name')}
+        ${detailField(c,'title','Title')}
+        ${detailField(c,'email','Email')}
+        ${detailField(c,'phone','Phone')}
+        ${detailField(c,'htiPOC','HTI POC')}
+        ${detailField(c,'location','Location / Context')}
+        ${detailSelect(c,'priority','Priority',PRIORITY_OPTIONS)}
+        ${detailField(c,'priorDonation','Prior donation ($)','number')}
+        ${detailField(c,'suggestedAsk','Suggested ask ($)','number')}
+        ${detailField(c,'fallbackAsk','Fallback ask ($)','number')}
+        ${detailSelect(c,'status','Status',STATUS_OPTIONS)}
+        ${detailSelect(c,'outcome','Outcome',OUTCOME_OPTIONS)}
+        ${detailField(c,'committedAmount','Committed amount ($)','number')}
+        ${detailSelect(c,'silentAuction','Silent auction item?',SILENT_OPTIONS)}
+        ${detailField(c,'firstEmailDate','First email target date','date')}
+        ${detailField(c,'lastContacted','Last contacted','date')}
+        ${detailField(c,'followUpDate','Follow-up date','date')}
+        ${detailField(c,'followUpMethod','Follow-up method')}
+        ${detailField(c,'packet','Packet / attachment')}
+        ${detailTextarea(c,'personalNotes','Personal knowledge / relationship notes')}
+        ${detailTextarea(c,'messageAngle','Message angle')}
+        ${detailTextarea(c,'nextAction','Next action')}
+        ${detailTextarea(c,'notes','Notes')}
+      </div>
+      <div class="detail-actions">
+        <button class="del-btn" onclick="deleteContact('${c.id}')">Remove contact</button>
+        <button class="save-btn" onclick="saveCardForm('${c.id}')">Save changes</button>
+      </div>
+    </div>
+  `;
+}
+
+function detailField(c, field, label, type='text'){
+  const val = (c[field]??'').toString().replace(/"/g,'&quot;');
+  return `<div class="field"><label>${label}</label><input id="f-${c.id}-${field}" type="${type}" value="${val}"></div>`;
+}
+function detailTextarea(c, field, label){
+  return `<div class="field full"><label>${label}</label><textarea id="f-${c.id}-${field}">${c[field]??''}</textarea></div>`;
+}
+function detailSelect(c, field, label, opts){
+  return `<div class="field"><label>${label}</label><select id="f-${c.id}-${field}">${opts.map(o=>`<option value="${o}" ${c[field]===o?'selected':''}>${o}</option>`).join('')}</select></div>`;
+}
+
+loadData();
+</script>
+</body>
+</html>
